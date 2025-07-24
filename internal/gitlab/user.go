@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/google/go-querystring/query"
 )
 
 type UserService struct {
@@ -20,8 +22,24 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-func (s *UserService) ListUsers() ([]User, error) {
-	req, err := s.client.newRequest(http.MethodGet, "/api/v4/users")
+type ListUsersOptions struct {
+	Page    int  `url:"page,omitempty"`
+	PerPage int  `url:"per_page,omitempty"`
+	Active  bool `url:"active,omitempty"`
+}
+
+func (s *UserService) ListUsers(opts ListUsersOptions) ([]User, error) {
+	v, err := query.Values(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	path := "/api/v4/users"
+	if len(v) > 0 {
+		path += "?" + v.Encode()
+	}
+
+	req, err := s.client.newRequest(http.MethodGet, path)
 	if err != nil {
 		return nil, fmt.Errorf("fail to create list users request: %w", err)
 	}
@@ -33,6 +51,32 @@ func (s *UserService) ListUsers() ([]User, error) {
 	}
 
 	return users, nil
+}
+
+func (s *UserService) ListAllActiveUsers() ([]User, error) {
+	var allUsers []User
+
+	opts := ListUsersOptions{
+		Page:    1,
+		PerPage: 100,
+		Active:  true,
+	}
+
+	for {
+		users, err := s.ListUsers(opts)
+		if err != nil {
+			return nil, fmt.Errorf("fail to list users: %w", err)
+		}
+
+		if len(users) == 0 {
+			break
+		}
+
+		allUsers = append(allUsers, users...)
+		opts.Page++
+	}
+
+	return allUsers, nil
 }
 
 //	{

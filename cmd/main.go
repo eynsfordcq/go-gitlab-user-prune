@@ -14,7 +14,7 @@ func main() {
 	}
 
 	client := gitlab.NewClient(config.APIBaseUrl, config.APIToken)
-	users, err := client.Users.ListUsers()
+	users, err := client.Users.ListAllActiveUsers()
 	if err != nil {
 		log.Fatalf("fail to fetch users: %v", err)
 	}
