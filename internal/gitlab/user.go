@@ -13,13 +13,15 @@ type UserService struct {
 }
 
 type User struct {
-	ID        int       `json:"id"`
-	Username  string    `json:"username"`
-	Email     string    `json:"email"`
-	State     string    `json:"state"`
-	Note      string    `json:"note"`
-	LastLogin time.Time `json:"last_sign_in_at"`
-	CreatedAt time.Time `json:"created_at"`
+	ID           int        `json:"id"`
+	Username     string     `json:"username"`
+	Email        string     `json:"email"`
+	State        string     `json:"state"`
+	Note         string     `json:"note"`
+	IsBot        bool       `json:"bot"`
+	LastActivity *Date      `json:"last_activity_on"`
+	LastLogin    *time.Time `json:"last_sign_in_at"`
+	CreatedAt    *time.Time `json:"created_at"`
 }
 
 type ListUsersOptions struct {
@@ -79,58 +81,18 @@ func (s *UserService) ListAllActiveUsers() ([]User, error) {
 	return allUsers, nil
 }
 
-//	{
-//	        "id": 131,
-//	        "username": "test",
-//	        "name": "Test",
-//	        "state": "active",
-//	        "locked": false,
-//	        "avatar_url": "https://secure.gravatar.com/avatar/fce99064b7fd70aec498a5c44f61e3703cd9a1f9663144a559ff599dc34b81f1?s=80&d=identicon",
-//	        "web_url": "https://gitlab.globeoss.com/test",
-//	        "created_at": "2025-07-24T12:53:38.785Z",
-//	        "bio": "",
-//	        "location": "",
-//	        "public_email": null,
-//	        "skype": "",
-//	        "linkedin": "",
-//	        "twitter": "",
-//	        "discord": "",
-//	        "website_url": "",
-//	        "organization": "",
-//	        "job_title": "",
-//	        "pronouns": null,
-//	        "bot": false,
-//	        "work_information": null,
-//	        "followers": 0,
-//	        "following": 0,
-//	        "is_followed": false,
-//	        "local_time": null,
-//	        "last_sign_in_at": null,
-//	        "confirmed_at": "2025-07-24T12:53:38.557Z",
-//	        "last_activity_on": null,
-//	        "email": "test@globeoss.com",
-//	        "theme_id": 3,
-//	        "color_scheme_id": 1,
-//	        "projects_limit": 100000,
-//	        "current_sign_in_at": null,
-//	        "identities": [],
-//	        "can_create_group": true,
-//	        "can_create_project": true,
-//	        "two_factor_enabled": false,
-//	        "external": false,
-//	        "private_profile": false,
-//	        "commit_email": "test@globeoss.com",
-//	        "is_admin": false,
-//	        "note": "User created to test script; PIC: ZJ.",
-//	        "namespace_id": 747,
-//	        "created_by": {
-//	            "id": 8,
-//	            "username": "zhengjie",
-//	            "name": "Chia Zheng Jie",
-//	            "state": "active",
-//	            "locked": false,
-//	            "avatar_url": "https://gitlab.globeoss.com/uploads/-/system/user/avatar/8/avatar.png",
-//	            "web_url": "https://gitlab.globeoss.com/zhengjie"
-//	        },
-//	        "email_reset_offered_at": null
-//	    },
+func (s *UserService) BlockUser(id int) error {
+	path := fmt.Sprintf("/api/v4/users/%d/block", id)
+
+	req, err := s.client.newRequest(http.MethodPost, path)
+	if err != nil {
+		return fmt.Errorf("fail to create block user request: %w", err)
+	}
+
+	_, err = s.client.do(req, nil)
+	if err != nil {
+		return fmt.Errorf("fail to block user %d: %w", id, err)
+	}
+
+	return nil
+}

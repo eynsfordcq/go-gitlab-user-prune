@@ -13,6 +13,7 @@ type Config struct {
 	InactivityDays int
 	DryRun         bool
 	Whitelist      map[string]struct{}
+	WhiteListText  string
 }
 
 func Load() (*Config, error) {
@@ -56,11 +57,17 @@ func Load() (*Config, error) {
 		dryRun = false
 	}
 
+	whitelistText := os.Getenv("WHITELIST_TEXT")
+	if whitelistText == "" {
+		whitelistText = "[SKIP PRUNE]"
+	}
+
 	return &Config{
 		APIBaseUrl:     strings.TrimRight(apiURL, "/"),
 		APIToken:       apiToken,
 		Whitelist:      whitelist,
 		DryRun:         dryRun,
 		InactivityDays: inactivityDays,
+		WhiteListText:  whitelistText,
 	}, nil
 }
