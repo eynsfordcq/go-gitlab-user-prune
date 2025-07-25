@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"time"
 )
@@ -63,8 +62,6 @@ func (c *Client) do(req *http.Request, v any) (*http.Response, error) {
 			body,
 		)
 	}
-
-	log.Printf("request success with code %s", resp.Status)
 
 	// decode body
 	if v != nil {

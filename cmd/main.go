@@ -17,19 +17,17 @@ func getUsersToBlock(users []gitlab.User, cfg *config.Config) []gitlab.User {
 	for _, user := range users {
 		// check if user is in whitelist
 		if _, ok := cfg.Whitelist[user.Email]; ok {
-			log.Printf("user %s is in whitelist, skipping", user.Email)
 			continue
 		}
 
 		// check notes
 		if strings.Contains(user.Note, cfg.WhiteListText) {
-			log.Printf("user %s is whitelisted by admin note, skipping", user.Email)
 			continue
 		}
 
 		// check if is bot
 		if user.IsBot {
-			log.Printf("user %s is bot, skipping", user.Email)
+			continue
 		}
 
 		// find the lastest activity whether it's just created
@@ -71,9 +69,6 @@ func main() {
 	}
 
 	log.Printf("fetched %d users", len(users))
-	for _, user := range users {
-		log.Print(user)
-	}
 
 	candidates := getUsersToBlock(users, config)
 	if len(candidates) == 0 {
@@ -82,7 +77,13 @@ func main() {
 	}
 
 	log.Printf("found %d users to prune", len(candidates))
+	log.Printf("dry run flag: %v", config.DryRun)
 	for _, user := range candidates {
+		log.Printf("block user: %s with id: %d ", user.Email, user.ID)
+		if config.DryRun {
+			continue
+		}
+
 		err = client.Users.BlockUser(user.ID)
 		if err != nil {
 			log.Printf("fail to block user: %s", user.Email)
