@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -56,6 +57,30 @@ func getUsersToBlock(users []gitlab.User, cfg *config.Config) []gitlab.User {
 	return candidates
 }
 
+func blockAndSetNotes(c *gitlab.Client, user gitlab.User) {
+	// block user
+	err := c.Users.BlockUser(user.ID)
+	if err != nil {
+		log.Printf("fail to block user: %s", user.Email)
+	} else {
+		log.Printf("block user %s success", user.Email)
+	}
+
+	// update user note
+	note := fmt.Sprintf("blocked by pruning script due to inactivity. %s",
+		time.Now(),
+	)
+
+	err = c.Users.UpdateUser(user.ID, gitlab.UpdateUserOptions{
+		Note: note,
+	})
+	if err != nil {
+		log.Printf("fail to update user: %s", user.Email)
+	} else {
+		log.Printf("update user %s success", user.Email)
+	}
+}
+
 func main() {
 	config, err := config.Load()
 	if err != nil {
@@ -83,13 +108,7 @@ func main() {
 		if config.DryRun {
 			continue
 		}
-
-		err = client.Users.BlockUser(user.ID)
-		if err != nil {
-			log.Printf("fail to block user: %s", user.Email)
-		} else {
-			log.Printf("block user %s success", user.Email)
-		}
+		blockAndSetNotes(client, user)
 	}
 
 	log.Printf("completed")

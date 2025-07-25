@@ -1,6 +1,7 @@
 package gitlab
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -32,9 +33,19 @@ func NewClient(baseURL, token string) *Client {
 	return c
 }
 
-func (c *Client) newRequest(method, path string) (*http.Request, error) {
+func (c *Client) newRequest(method, path string, body any) (*http.Request, error) {
 	url := fmt.Sprintf("%s%s", c.baseURL, path)
-	req, err := http.NewRequest(method, url, nil)
+
+	var buf io.ReadWriter
+	if body != nil {
+		buf = new(bytes.Buffer)
+		err := json.NewEncoder(buf).Encode(body)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	req, err := http.NewRequest(method, url, buf)
 	if err != nil {
 		return nil, err
 	}

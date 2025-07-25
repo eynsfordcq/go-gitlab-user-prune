@@ -41,7 +41,7 @@ func (s *UserService) ListUsers(opts ListUsersOptions) ([]User, error) {
 		path += "?" + v.Encode()
 	}
 
-	req, err := s.client.newRequest(http.MethodGet, path)
+	req, err := s.client.newRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, fmt.Errorf("fail to create list users request: %w", err)
 	}
@@ -84,7 +84,7 @@ func (s *UserService) ListAllActiveUsers() ([]User, error) {
 func (s *UserService) BlockUser(id int) error {
 	path := fmt.Sprintf("/api/v4/users/%d/block", id)
 
-	req, err := s.client.newRequest(http.MethodPost, path)
+	req, err := s.client.newRequest(http.MethodPost, path, nil)
 	if err != nil {
 		return fmt.Errorf("fail to create block user request: %w", err)
 	}
@@ -92,6 +92,26 @@ func (s *UserService) BlockUser(id int) error {
 	_, err = s.client.do(req, nil)
 	if err != nil {
 		return fmt.Errorf("fail to block user %d: %w", id, err)
+	}
+
+	return nil
+}
+
+type UpdateUserOptions struct {
+	Note string `json:"note,omitempty"`
+}
+
+func (s *UserService) UpdateUser(id int, opts UpdateUserOptions) error {
+	path := fmt.Sprintf("/api/v4/users/%d", id)
+
+	req, err := s.client.newRequest(http.MethodPut, path, opts)
+	if err != nil {
+		return fmt.Errorf("fail to create update user request: %w", err)
+	}
+
+	_, err = s.client.do(req, nil)
+	if err != nil {
+		return fmt.Errorf("fail to update user %d: %w", id, err)
 	}
 
 	return nil
